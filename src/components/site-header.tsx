@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { Button } from "@/components/ui/button";
 import { HeaderSignOut } from "./header-sign-out";
+import { ThemeToggle } from "./theme-toggle";
 
 export async function SiteHeader() {
   const session = await auth.api.getSession({
@@ -20,7 +21,8 @@ export async function SiteHeader() {
             AI Meal Macro Planner
           </span>
         </Link>
-        <nav className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
+        <nav className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
+          <ThemeToggle />
           {session ? (
             <>
               <Button asChild variant="ghost" size="sm">

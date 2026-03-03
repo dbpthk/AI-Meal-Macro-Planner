@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { SignOutButton } from "./sign-out-button";
@@ -10,22 +11,28 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getDashboardData } from "./actions/dashboard";
+import { MacroDashboard } from "./macro-dashboard";
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
-  if (!session) {
-    return null;
+  if (!session?.user?.id) {
+    redirect("/login");
   }
+
+  const data = await getDashboardData(session.user.id);
 
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold sm:text-xl">Overview</h2>
+        <h2 className="text-lg font-semibold sm:text-xl">Macro Dashboard</h2>
         <SignOutButton />
       </div>
+
+      <MacroDashboard data={data} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
@@ -62,16 +69,16 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              AI Meal Macro Planner
+              Profile
             </CardTitle>
             <CardDescription>
-              Your personalized nutrition dashboard
+              Set your stats and calculate macros
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              More features coming soon.
-            </p>
+            <Button asChild size="sm">
+              <Link href="/dashboard/profile">Profile setup</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

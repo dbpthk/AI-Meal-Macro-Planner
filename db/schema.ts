@@ -80,6 +80,36 @@ export const foods = pgTable(
   ]
 );
 
+// Daily logs - aggregated daily intake per user (for progress bars, weekly summary)
+export const dailyLogs = pgTable(
+  "daily_logs",
+  {
+    id: serial("id").primaryKey(),
+    userId: varchar("user_id", { length: 255 })
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    loggedAt: date("logged_at").notNull(),
+    calories: real("calories")
+      .notNull()
+      .default(0),
+    proteinG: real("protein_g")
+      .notNull()
+      .default(0),
+    carbsG: real("carbs_g")
+      .notNull()
+      .default(0),
+    fatG: real("fat_g")
+      .notNull()
+      .default(0),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("daily_logs_user_id_idx").on(t.userId),
+    uniqueIndex("daily_logs_user_date_idx").on(t.userId, t.loggedAt),
+  ]
+);
+
 // Weight logs - user weight tracking over time (1:many with user)
 export const weightLogs = pgTable(
   "weight_logs",
@@ -103,8 +133,16 @@ export const weightLogs = pgTable(
 export const userRelations = relations(user, ({ one, many }) => ({
   profile: one(profiles),
   macroTargets: many(macroTargets),
+  dailyLogs: many(dailyLogs),
   weightLogs: many(weightLogs),
   foods: many(foods),
+}));
+
+export const dailyLogsRelations = relations(dailyLogs, ({ one }) => ({
+  user: one(user, {
+    fields: [dailyLogs.userId],
+    references: [user.id],
+  }),
 }));
 
 export const profilesRelations = relations(profiles, ({ one }) => ({
