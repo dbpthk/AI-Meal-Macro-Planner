@@ -1,7 +1,7 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/card";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
   const [email, setEmail] = useState("");
@@ -43,8 +42,8 @@ function LoginForm() {
         setError(msg);
         return;
       }
-      router.push(callbackUrl);
-      router.refresh();
+      // Full page redirect ensures cookies are sent on the next request
+      window.location.href = callbackUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
