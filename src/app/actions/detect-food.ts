@@ -1,7 +1,6 @@
 "use server";
 
 import OpenAI from "openai";
-import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import {
@@ -103,13 +102,6 @@ Rules:
   }
 }
 
-const singleIngredientSchema = z.object({
-  caloriesPer100g: z.number().min(0),
-  proteinPer100g: z.number().min(0),
-  carbsPer100g: z.number().min(0),
-  fatPer100g: z.number().min(0),
-});
-
 export async function lookupIngredientMacros(
   ingredientName: string
 ): Promise<{
@@ -130,75 +122,28 @@ export async function lookupIngredientMacros(
     return { error: "Enter an ingredient name." };
   }
 
-  // Try USDA FoodData Central first (free, no quota)
+  // Use USDA FoodData Central only (free, no quota) - no OpenAI fallback
   const usdaKey = process.env.USDA_FDC_API_KEY;
-  if (usdaKey) {
-    const { lookupUsdaMacros } = await import("@/lib/usda-fdc");
-    const usdaResult = await lookupUsdaMacros(name, usdaKey);
-    if (usdaResult.success) {
-      return {
-        success: true,
-        ...usdaResult.data,
-      };
-    }
-    // USDA failed (no results, etc.) - fall through to OpenAI
-  }
-
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
+  if (!usdaKey) {
     return {
-      error: usdaKey
-        ? "No results from USDA. OpenAI is not configured."
-        : "Configure USDA_FDC_API_KEY or OPENAI_API_KEY for macro lookup.",
+      error:
+        "Macro lookup requires USDA_FDC_API_KEY. Add it to .env (free key from https://fdc.nal.usda.gov/api-key-signup).",
     };
   }
 
-  const openai = new OpenAI({ apiKey });
+  const { lookupUsdaMacros } = await import("@/lib/usda-fdc");
+  const usdaResult = await lookupUsdaMacros(name, usdaKey);
 
-  const prompt = `For the food "${name}", provide typical nutrition per 100g. Return only valid JSON with this exact structure:
-{
-  "caloriesPer100g": 0,
-  "proteinPer100g": 0,
-  "carbsPer100g": 0,
-  "fatPer100g": 0
-}
-Use typical values for this food (raw/cooked as appropriate). Round to 1 decimal.`;
-
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a nutrition assistant. Return only valid JSON, no markdown.",
-        },
-        { role: "user", content: prompt },
-      ],
-      response_format: { type: "json_object" },
-      max_tokens: 128,
-    });
-
-    const content = completion.choices[0]?.message?.content;
-    if (!content) {
-      return { error: "No response from AI." };
-    }
-
-    const parsed = JSON.parse(content) as unknown;
-    const validated = singleIngredientSchema.safeParse(parsed);
-
-    if (!validated.success) {
-      return { error: "Could not get macros for this ingredient." };
-    }
-
+  if (usdaResult.success) {
     return {
       success: true,
-      ...validated.data,
+      ...usdaResult.data,
     };
-  } catch (err) {
-    console.error("Ingredient lookup failed:", err);
-    const message =
-      err instanceof Error ? err.message : "Failed to look up ingredient.";
-    return { error: message };
   }
+
+  return {
+    error:
+      usdaResult.error ||
+      "No nutrition data found. Try a more specific ingredient name (e.g. \"chicken breast raw\").",
+  };
 }

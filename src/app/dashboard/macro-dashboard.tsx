@@ -66,26 +66,30 @@ export function MacroDashboard({ data }: { data: DashboardData }) {
                 current: todayLog.calories,
                 target: calTarget,
                 unit: "kcal",
+                progressClass: "macro-progress-calories",
               },
               {
                 label: "Protein",
                 current: todayLog.proteinG,
                 target: proteinTarget,
                 unit: "g",
+                progressClass: "macro-progress-protein",
               },
               {
                 label: "Carbs",
                 current: todayLog.carbsG,
                 target: carbsTarget,
                 unit: "g",
+                progressClass: "macro-progress-carbs",
               },
               {
                 label: "Fat",
                 current: todayLog.fatG,
                 target: fatTarget,
                 unit: "g",
+                progressClass: "macro-progress-fat",
               },
-            ].map(({ label, current, target: targetVal, unit }) => (
+            ].map(({ label, current, target: targetVal, unit, progressClass }) => (
               <div key={label} className="space-y-1.5">
                 <div className="flex justify-between text-sm">
                   <span>{label}</span>
@@ -96,6 +100,7 @@ export function MacroDashboard({ data }: { data: DashboardData }) {
                 <Progress
                   value={progress(current, targetVal)}
                   aria-label={`${label}: ${current} of ${targetVal} ${unit}`}
+                  className={progressClass}
                 />
               </div>
             ))

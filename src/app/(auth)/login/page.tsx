@@ -54,62 +54,64 @@ function LoginForm() {
 
   return (
     <Card className="w-full border-0 shadow-xl sm:border [&_[data-slot=card-header]]:px-4 [&_[data-slot=card-header]]:sm:px-6 [&_[data-slot=card-content]]:px-4 [&_[data-slot=card-content]]:sm:px-6 [&_[data-slot=card-footer]]:px-4 [&_[data-slot=card-footer]]:sm:px-6">
-        <CardHeader>
-          <CardTitle>Sign in</CardTitle>
-          <CardDescription>
-            Enter your credentials to access your account
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {error && (
-              <p className="text-sm text-destructive" role="alert">
-                {error}
-              </p>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
-            </Button>
-            <p className="text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="text-primary underline">
-                Sign up
-              </Link>
+      <CardHeader>
+        <CardTitle>Sign in</CardTitle>
+        <CardDescription>
+          Enter your credentials to access your account
+        </CardDescription>
+      </CardHeader>
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-4">
+          {error && (
+            <p className="text-sm text-destructive" role="alert">
+              {error}
             </p>
-          </CardFooter>
-        </form>
-      </Card>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-col gap-4 mt-4">
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Signing in..." : "Sign in"}
+          </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="text-primary underline">
+              Sign up
+            </Link>
+          </p>
+        </CardFooter>
+      </form>
+    </Card>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<Card className="w-full max-w-md animate-pulse p-6 sm:p-8" />}>
+    <Suspense
+      fallback={<Card className="w-full max-w-md animate-pulse p-6 sm:p-8" />}
+    >
       <LoginForm />
     </Suspense>
   );

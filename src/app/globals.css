@@ -35,6 +35,7 @@
     --color-chart-3: var(--chart-3);
     --color-chart-4: var(--chart-4);
     --color-chart-5: var(--chart-5);
+    --color-primary-hover: var(--primary-hover);
     --color-sidebar: var(--sidebar);
     --color-sidebar-foreground: var(--sidebar-foreground);
     --color-sidebar-primary: var(--sidebar-primary);
@@ -47,6 +48,7 @@
 
 :root {
     --radius: 0.75rem;
+    --primary-hover: #2563EB;
     --background: oklch(0.985 0.002 247);
     --foreground: oklch(0.18 0.02 260);
     --card: oklch(1 0 0);
@@ -81,38 +83,58 @@
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    /* Main app background, neutral dark gray */
+    --background: #1F2937;
+    /* Cards/panels - slightly darker for contrast */
+    --card: #111827;
+    --popover: #111827;
+    /* Primary text */
+    --foreground: #FFFFFF;
+    --card-foreground: #FFFFFF;
+    --popover-foreground: #FFFFFF;
+    /* Primary button - blue for main actions */
+    --primary: #3B82F6;
+    --primary-foreground: #FFFFFF;
+    --primary-hover: #2563EB;
+    --ring: #3B82F6;
+    /* Secondary button / accent - orange */
+    --secondary: #F97316;
+    --secondary-foreground: #FFFFFF;
+    --accent: #F97316;
+    --accent-foreground: #FFFFFF;
+    /* Secondary text / labels */
+    --muted: #374151;
+    --muted-foreground: #9CA3AF;
+    /* Error / warning */
+    --destructive: #EF4444;
+    --border: rgba(255, 255, 255, 0.1);
+    --input: rgba(255, 255, 255, 0.15);
+    /* Macro chart colors */
+    --chart-1: #60A5FA; /* Protein - blue */
+    --chart-2: #FACC15; /* Carbs - yellow */
+    --chart-3: #FB923C; /* Fat - reddish-orange */
+    --chart-4: #84CC16; /* Fiber / micronutrients - lime */
+    --chart-5: #3B82F6; /* Accent */
+    /* Sidebar */
+    --sidebar: #111827;
+    --sidebar-foreground: #FFFFFF;
+    --sidebar-primary: #3B82F6;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #F97316;
+    --sidebar-accent-foreground: #FFFFFF;
+    --sidebar-border: rgba(255, 255, 255, 0.1);
+    --sidebar-ring: #3B82F6;
 }
+
+/* Macro progress bar colors - indicator (fill) and track */
+.macro-progress-calories { background: color-mix(in srgb, var(--primary) 20%, transparent) !important; }
+.macro-progress-calories > div { background: var(--primary) !important; }
+.macro-progress-protein { background: color-mix(in srgb, var(--chart-1) 20%, transparent) !important; }
+.macro-progress-protein > div { background: var(--chart-1) !important; }
+.macro-progress-carbs { background: color-mix(in srgb, var(--chart-2) 20%, transparent) !important; }
+.macro-progress-carbs > div { background: var(--chart-2) !important; }
+.macro-progress-fat { background: color-mix(in srgb, var(--chart-3) 20%, transparent) !important; }
+.macro-progress-fat > div { background: var(--chart-3) !important; }
 
 @layer base {
   * {

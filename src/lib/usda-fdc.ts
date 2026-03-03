@@ -77,35 +77,44 @@ export async function lookupUsdaMacros(
   }
 
   try {
-    // Search - use POST for dataType filter (SR Legacy = per-100g standard)
-    const searchRes = await fetch(
-      `${USDA_API_BASE}/foods/search?api_key=${encodeURIComponent(apiKey)}`,
+    // Search - try SR Legacy / Foundation first (per-100g), then fallback to all data types
+    const searchBodies = [
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query,
-          pageSize: 10,
-          dataType: ["Foundation Foods", "SR Legacy", "Survey (FNDDS)"],
-        }),
-        next: { revalidate: 0 },
-      }
-    );
+        query,
+        pageSize: 10,
+        dataType: ["Foundation Foods", "SR Legacy", "Survey (FNDDS)"],
+      },
+      { query, pageSize: 10 },
+    ];
 
-    if (!searchRes.ok) {
-      const errText = await searchRes.text();
-      return {
-        success: false,
-        error: `USDA API error: ${searchRes.status}`,
+    let foods: SearchFood[] = [];
+    for (const body of searchBodies) {
+      const searchRes = await fetch(
+        `${USDA_API_BASE}/foods/search?api_key=${encodeURIComponent(apiKey)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          next: { revalidate: 0 },
+        }
+      );
+
+      if (!searchRes.ok) {
+        return {
+          success: false,
+          error: `USDA API error: ${searchRes.status}`,
+        };
+      }
+
+      const searchData = (await searchRes.json()) as {
+        foods?: SearchFood[];
+        totalHits?: number;
       };
+
+      foods = searchData.foods ?? [];
+      if (foods.length > 0) break;
     }
 
-    const searchData = (await searchRes.json()) as {
-      foods?: SearchFood[];
-      totalHits?: number;
-    };
-
-    const foods = searchData.foods ?? [];
     if (foods.length === 0) {
       return { success: false, error: "No foods found." };
     }
