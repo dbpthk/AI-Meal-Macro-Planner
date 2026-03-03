@@ -8,6 +8,10 @@ import { headers } from "next/headers";
 const detectedFoodItemSchema = z.object({
   name: z.string(),
   estimatedWeightG: z.number().min(0),
+  caloriesPer100g: z.number().min(0),
+  proteinPer100g: z.number().min(0),
+  carbsPer100g: z.number().min(0),
+  fatPer100g: z.number().min(0),
   confidence: z.number().min(0).max(1).optional(),
 });
 
@@ -43,7 +47,7 @@ export async function detectFoodFromImage(
 
   const openai = new OpenAI({ apiKey });
 
-  const systemPrompt = `You are a nutrition assistant that analyzes food images. Identify all visible food items and estimate their weight in grams. Be precise and conservative with estimates. Return only valid JSON.`;
+  const systemPrompt = `You are a nutrition assistant that analyzes food images. Identify all visible food items, estimate their weight in grams, and provide typical nutrition per 100g. Return only valid JSON.`;
 
   const userPrompt = `Analyze this food image and return a JSON object with this exact structure:
 {
@@ -51,6 +55,10 @@ export async function detectFoodFromImage(
     {
       "name": "Food item name",
       "estimatedWeightG": 150,
+      "caloriesPer100g": 165,
+      "proteinPer100g": 31,
+      "carbsPer100g": 0,
+      "fatPer100g": 3.6,
       "confidence": 0.9
     }
   ]
@@ -58,8 +66,9 @@ export async function detectFoodFromImage(
 
 Rules:
 - name: descriptive food name (e.g. "Grilled chicken breast", "Mixed salad")
-- estimatedWeightG: estimated weight in grams (number)
-- confidence: 0-1 how confident you are in the estimate (optional)
+- estimatedWeightG: estimated weight in grams
+- caloriesPer100g, proteinPer100g, carbsPer100g, fatPer100g: typical nutrition per 100g for this food
+- confidence: 0-1 how confident you are (optional)
 - Include all visible food items
 - If no food is detected, return {"items": []}`;
 
