@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const PROTECTED_PATHS = ["/dashboard"];
-const SESSION_COOKIE = "better-auth.session_token";
+// Better Auth uses __Secure- prefix in production (useSecureCookies)
+const SESSION_COOKIES = [
+  "better-auth.session_token",
+  "__Secure-better-auth.session_token",
+];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -12,7 +16,9 @@ export function proxy(request: NextRequest) {
   );
 
   if (isProtected) {
-    const hasSession = request.cookies.has(SESSION_COOKIE);
+    const hasSession = SESSION_COOKIES.some((name) =>
+      request.cookies.has(name)
+    );
     if (!hasSession) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
