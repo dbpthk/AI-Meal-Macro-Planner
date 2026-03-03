@@ -12,7 +12,7 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
           className="min-w-0 flex-shrink font-semibold tracking-tight"
@@ -21,7 +21,10 @@ export async function SiteHeader() {
             AI Meal Macro Planner
           </span>
         </Link>
-        <nav className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
+        <nav
+          className="flex flex-shrink-0 items-center gap-1 sm:gap-2"
+          aria-label="Main navigation"
+        >
           <ThemeToggle />
           {session ? (
             <>

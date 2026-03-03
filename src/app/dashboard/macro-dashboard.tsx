@@ -75,14 +75,17 @@ export function MacroDashboard({ data }: { data: DashboardData }) {
                 unit: "g",
               },
             ].map(({ label, current, target: targetVal, unit }) => (
-              <div key={label}>
-                <div className="mb-1 flex justify-between text-sm">
+              <div key={label} className="space-y-1.5">
+                <div className="flex justify-between text-sm">
                   <span>{label}</span>
                   <span>
                     {current} / {targetVal} {unit}
                   </span>
                 </div>
-                <Progress value={progress(current, targetVal)} />
+                <Progress
+                  value={progress(current, targetVal)}
+                  aria-label={`${label}: ${current} of ${targetVal} ${unit}`}
+                />
               </div>
             ))
           ) : (
@@ -101,8 +104,8 @@ export function MacroDashboard({ data }: { data: DashboardData }) {
             <CardDescription>Your weight over the last 30 days</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="min-h-48 w-full overflow-x-auto sm:min-h-64">
+              <ResponsiveContainer width="100%" height="100%" minWidth={280}>
                 <LineChart data={weightData}>
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -152,8 +155,8 @@ export function MacroDashboard({ data }: { data: DashboardData }) {
             </span>
           </div>
           {weeklyLogs.length > 0 ? (
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="min-h-40 w-full overflow-x-auto sm:min-h-48">
+              <ResponsiveContainer width="100%" height="100%" minWidth={280}>
                 <BarChart data={weeklyLogs}>
                   <CartesianGrid
                     strokeDasharray="3 3"

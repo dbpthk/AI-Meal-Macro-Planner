@@ -26,11 +26,13 @@ export default async function DashboardPage() {
   const data = await getDashboardData(session.user.id);
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold sm:text-xl">Macro Dashboard</h2>
+    <div className="space-y-6">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-lg font-semibold tracking-tight sm:text-xl">
+          Macro Dashboard
+        </h1>
         <SignOutButton />
-      </div>
+      </header>
 
       <MacroDashboard data={data} />
 

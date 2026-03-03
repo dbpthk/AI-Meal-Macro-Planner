@@ -50,6 +50,7 @@ export function MealPlanForm() {
                 name="dietaryPreference"
                 defaultValue="none"
                 required
+                aria-describedby={state?.error ? "dietary-error" : undefined}
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
               >
                 {DIETARY_OPTIONS.map((opt) => (
@@ -60,7 +61,9 @@ export function MealPlanForm() {
               </select>
             </div>
             {state?.error && (
-              <p className="text-sm text-destructive">{state.error}</p>
+              <p className="text-sm text-destructive" role="alert" id="dietary-error">
+                {state.error}
+              </p>
             )}
             <Button type="submit" disabled={isPending}>
               {isPending ? "Generating..." : "Generate meal plan"}

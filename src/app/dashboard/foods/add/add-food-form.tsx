@@ -127,7 +127,9 @@ export function AddFoodForm() {
           )}
         </div>
         {detectError && (
-          <p className="text-sm text-destructive">{detectError}</p>
+          <p className="text-sm text-destructive" role="alert">
+            {detectError}
+          </p>
         )}
         {ingredients.length > 0 && (
           <div className="space-y-3">
@@ -149,6 +151,7 @@ export function AddFoodForm() {
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <Input
+                        id={`weight-${i}`}
                         type="number"
                         min={0}
                         value={item.weightG}
@@ -156,6 +159,7 @@ export function AddFoodForm() {
                           updateWeight(i, Number(e.target.value) || 0)
                         }
                         className="w-20 text-right"
+                        aria-label={`Weight in grams for ${item.name}`}
                       />
                       <span className="text-sm text-muted-foreground">g</span>
                     </div>
