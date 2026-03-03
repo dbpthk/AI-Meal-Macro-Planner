@@ -20,7 +20,7 @@ export type DashboardData = {
     fatG: number;
   };
   weightData: { loggedAt: string; weightKg: number }[];
-  weeklyLogs: { loggedAt: string; calories: number }[];
+  weeklyLogs: { loggedAt: string; dayName: string; calories: number }[];
 };
 
 export async function getDashboardData(userId: string): Promise<DashboardData> {
@@ -56,20 +56,46 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     )
     .orderBy(weightLogs.loggedAt);
 
-  const weekAgo = new Date();
-  weekAgo.setDate(weekAgo.getDate() - 6);
-  const weekStart = weekAgo.toISOString().slice(0, 10);
-  const weeklyLogs = await db
+  // Current week: Monday to Sunday
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - daysFromMonday);
+  const weekStart = monday.toISOString().slice(0, 10);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const weekEnd = sunday.toISOString().slice(0, 10);
+
+  const weeklyLogsRaw = await db
     .select({ loggedAt: dailyLogs.loggedAt, calories: dailyLogs.calories })
     .from(dailyLogs)
     .where(
       and(
         eq(dailyLogs.userId, userId),
         gte(dailyLogs.loggedAt, weekStart),
-        lte(dailyLogs.loggedAt, today)
+        lte(dailyLogs.loggedAt, weekEnd)
       )
     )
     .orderBy(dailyLogs.loggedAt);
+
+  const logsByDate = Object.fromEntries(
+    weeklyLogsRaw.map((r) => [r.loggedAt, r.calories ?? 0])
+  );
+
+  const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const weeklyLogs: { loggedAt: string; dayName: string; calories: number }[] =
+    [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const dateStr = d.toISOString().slice(0, 10);
+    weeklyLogs.push({
+      loggedAt: dateStr,
+      dayName: DAY_NAMES[i],
+      calories: logsByDate[dateStr] ?? 0,
+    });
+  }
 
   return {
     target,
@@ -83,9 +109,6 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       loggedAt: r.loggedAt,
       weightKg: r.weightKg ?? 0,
     })),
-    weeklyLogs: weeklyLogs.map((r) => ({
-      loggedAt: r.loggedAt,
-      calories: r.calories ?? 0,
-    })),
+    weeklyLogs,
   };
 }

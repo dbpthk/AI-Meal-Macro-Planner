@@ -20,9 +20,21 @@ import {
   Bar,
 } from "recharts";
 import type { DashboardData } from "./actions/dashboard";
+import { WeightLogForm } from "./weight-log-form";
+
+function formatWeightDate(isoDate: string): string {
+  const d = new Date(isoDate + "T12:00:00");
+  return d.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 export function MacroDashboard({ data }: { data: DashboardData }) {
   const { target, todayLog, weightData, weeklyLogs } = data;
+  const today = new Date().toISOString().slice(0, 10);
+  const todayEntry = weightData.find((w) => w.loggedAt === today);
   const calTarget = target?.calories ?? 0;
   const proteinTarget = target?.proteinG ?? 0;
   const carbsTarget = target?.carbsG ?? 0;
@@ -32,7 +44,6 @@ export function MacroDashboard({ data }: { data: DashboardData }) {
     targetVal > 0 ? Math.min(100, (current / targetVal) * 100) : 0;
 
   const weeklyTotal = weeklyLogs.reduce((s, d) => s + d.calories, 0);
-  const weeklyAvg = weeklyLogs.length ? weeklyTotal / weeklyLogs.length : 0;
 
   const hasTargets = calTarget > 0 || proteinTarget > 0;
 
@@ -97,13 +108,39 @@ export function MacroDashboard({ data }: { data: DashboardData }) {
       </Card>
 
       {/* Weight trend */}
-      {weightData.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Weight trend</CardTitle>
-            <CardDescription>Your weight over the last 30 days</CardDescription>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle>Weight trend</CardTitle>
+          <CardDescription>
+            Your weight over the last 30 days. Add or update entries below.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <WeightLogForm
+            initialWeight={todayEntry?.weightKg}
+            initialDate={today}
+          />
+          {weightData.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">
+                Saved entries (last 30 days)
+              </p>
+              <ul className="max-h-32 overflow-y-auto rounded-md border bg-muted/30 p-2 text-sm">
+                {[...weightData]
+                  .reverse()
+                  .map(({ loggedAt, weightKg }) => (
+                    <li
+                      key={loggedAt}
+                      className="flex justify-between py-1.5 odd:bg-background/50 rounded px-2 -mx-2"
+                    >
+                      <span>{formatWeightDate(loggedAt)}</span>
+                      <span className="font-medium">{weightKg} kg</span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
+          {weightData.length > 0 ? (
             <div className="min-h-48 w-full overflow-x-auto sm:min-h-64">
               <ResponsiveContainer width="100%" height="100%" minWidth={280}>
                 <LineChart data={weightData}>
@@ -123,38 +160,48 @@ export function MacroDashboard({ data }: { data: DashboardData }) {
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Weight trend</CardTitle>
-            <CardDescription>Log your weight to see trends over time</CardDescription>
-          </CardHeader>
-          <CardContent>
+          ) : (
             <p className="text-sm text-muted-foreground">
-              No weight data yet. Add weight entries from your profile setup.
+              Log your weight above to see trends over time.
             </p>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* Weekly calorie summary */}
       <Card>
         <CardHeader>
           <CardTitle>Weekly calorie summary</CardTitle>
-          <CardDescription>Last 7 days</CardDescription>
+          <CardDescription>
+            Mon–Sun · {formatWeightDate(weeklyLogs[0]?.loggedAt ?? "")} –{" "}
+            {formatWeightDate(weeklyLogs[6]?.loggedAt ?? "")}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-4 text-sm">
-            <span>
-              <strong>Total:</strong> {Math.round(weeklyTotal)} kcal
-            </span>
-            <span>
-              <strong>Avg/day:</strong> {Math.round(weeklyAvg)} kcal
-            </span>
-          </div>
-          {weeklyLogs.length > 0 ? (
+          <ul className="rounded-md border bg-muted/30 p-2 text-sm">
+            {weeklyLogs.map(({ loggedAt, dayName, calories }) => (
+              <li
+                key={loggedAt}
+                className="flex justify-between items-center py-2 odd:bg-background/50 rounded px-2 -mx-2"
+              >
+                <span className="flex gap-3">
+                  <span className="w-9 font-medium">{dayName}</span>
+                  <span className="text-muted-foreground">
+                    {formatWeightDate(loggedAt)}
+                  </span>
+                </span>
+                <span className="font-medium">{Math.round(calories)} kcal</span>
+              </li>
+            ))}
+            <li
+              key="total"
+              className="flex justify-between items-center py-2 mt-2 pt-2 border-t font-semibold rounded px-2 -mx-2 bg-primary/5"
+            >
+              <span>Total</span>
+              <span>{Math.round(weeklyTotal)} kcal</span>
+            </li>
+          </ul>
+          {weeklyLogs.some((d) => d.calories > 0) && (
             <div className="min-h-40 w-full overflow-x-auto sm:min-h-48">
               <ResponsiveContainer width="100%" height="100%" minWidth={280}>
                 <BarChart data={weeklyLogs}>
@@ -162,9 +209,16 @@ export function MacroDashboard({ data }: { data: DashboardData }) {
                     strokeDasharray="3 3"
                     className="stroke-muted"
                   />
-                  <XAxis dataKey="loggedAt" />
+                  <XAxis dataKey="dayName" />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip
+                    formatter={(value: number | undefined) => [`${Math.round(value ?? 0)} kcal`, "Calories"]}
+                    labelFormatter={(_, payload) =>
+                      payload?.[0]?.payload?.loggedAt
+                        ? formatWeightDate(payload[0].payload.loggedAt)
+                        : ""
+                    }
+                  />
                   <Bar
                     dataKey="calories"
                     fill="var(--color-chart-2)"
@@ -173,7 +227,8 @@ export function MacroDashboard({ data }: { data: DashboardData }) {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          ) : (
+          )}
+          {!weeklyLogs.some((d) => d.calories > 0) && (
             <p className="text-sm text-muted-foreground">
               Log your meals to see daily calorie breakdown.
             </p>
