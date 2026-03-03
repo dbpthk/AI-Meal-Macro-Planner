@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { z } from "zod";
+import * as schema from "./schema";
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
@@ -26,4 +27,4 @@ const pool = new Pool({
   connectionString: env.DATABASE_URL,
 });
 
-export const db = drizzle({ client: pool });
+export const db = drizzle({ client: pool, schema });
