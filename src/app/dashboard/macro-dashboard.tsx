@@ -43,7 +43,8 @@ export function MacroDashboard({ data }: { data: DashboardData }) {
         <CardHeader>
           <CardTitle>Daily macros</CardTitle>
           <CardDescription>
-            Your progress toward today&apos;s macro targets
+            Your progress toward today&apos;s macro targets. Targets are
+            auto-calculated from your profile and weight trend—not editable.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

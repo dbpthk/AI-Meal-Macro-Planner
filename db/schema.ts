@@ -27,6 +27,7 @@ export const profiles = pgTable(
     gender: text("gender"),
     heightCm: real("height_cm"),
     activityLevel: text("activity_level"),
+    goal: text("goal"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
