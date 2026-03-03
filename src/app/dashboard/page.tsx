@@ -81,6 +81,21 @@ export default async function DashboardPage() {
             </Button>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              AI Meal Plan
+            </CardTitle>
+            <CardDescription>
+              Generate a 7-day meal plan from your macro targets
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild size="sm">
+              <Link href="/dashboard/meal-plan">Generate meal plan</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
