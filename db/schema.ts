@@ -64,6 +64,7 @@ export const foods = pgTable(
     }),
     name: text("name").notNull(),
     brand: text("brand"),
+    imageUrl: text("image_url"),
     servingSize: real("serving_size").notNull(),
     servingUnit: text("serving_unit").notNull(),
     caloriesPerServing: real("calories_per_serving").notNull(),

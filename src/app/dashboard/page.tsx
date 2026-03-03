@@ -84,6 +84,21 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
+              Add food
+            </CardTitle>
+            <CardDescription>
+              Add food items with optional image upload
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild size="sm">
+              <Link href="/dashboard/foods/add">Add food</Link>
+            </Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               AI Meal Plan
             </CardTitle>
             <CardDescription>
