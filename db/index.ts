@@ -1,27 +1,28 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { z } from "zod";
 import * as authSchema from "./auth-schema";
 import * as appSchema from "./schema";
 
 const schema = { ...authSchema, ...appSchema };
 
-const envSchema = z.object({
-  DATABASE_URL: z.string().url(),
-});
+const POSTGRES_URL_REGEX = /^postgres(?:ql)?:\/\/[^\s]+$/i;
 
 function getConnectionString() {
-  const url = process.env.DATABASE_URL;
+  let url = process.env.DATABASE_URL?.trim();
   if (!url) {
     return "postgresql://localhost:5432/placeholder";
   }
-  const parsed = envSchema.safeParse({ DATABASE_URL: url });
-  if (!parsed.success) {
+  // Strip psql CLI wrapper: psql 'postgresql://...' or psql "postgresql://..."
+  const match = url.match(/postgres(?:ql)?:\/\/[^'"]+/i);
+  if (match) {
+    url = match[0];
+  }
+  if (!POSTGRES_URL_REGEX.test(url)) {
     throw new Error(
-      `Invalid DATABASE_URL: must be a valid PostgreSQL URL (e.g. postgresql://user:pass@host:5432/db)`
+      `Invalid DATABASE_URL: must be a PostgreSQL URL (e.g. postgresql://user:pass@host:5432/db)`
     );
   }
-  return parsed.data.DATABASE_URL;
+  return url;
 }
 
 const pool = new Pool({

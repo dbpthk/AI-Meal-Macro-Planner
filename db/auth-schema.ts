@@ -46,7 +46,7 @@ export const account = pgTable("account", {
   refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
   scope: varchar("scope", { length: 255 }),
   idToken: text("id_token"),
-  password: varchar("password", { length: 255 }),
+  password: text("password"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

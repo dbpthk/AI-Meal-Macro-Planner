@@ -29,28 +29,31 @@ export default function SignupPage() {
     setError("");
     setLoading(true);
     try {
-      const { error } = await authClient.signUp.email({
-        name: name || email.split("@")[0],
+      const result = await authClient.signUp.email({
+        name: name.trim(),
         email,
         password,
         callbackURL: "/dashboard",
       });
-      if (error) {
-        setError(error.message ?? "Sign up failed");
+      if (result.error) {
+        const msg =
+          typeof result.error === "object" && "message" in result.error
+            ? String(result.error.message)
+            : "Sign up failed";
+        setError(msg);
         return;
       }
       router.push("/dashboard");
       router.refresh();
-    } catch {
-      setError("Something went wrong");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <Card className="w-full border-0 shadow-xl sm:border [&_[data-slot=card-header]]:px-4 [&_[data-slot=card-header]]:sm:px-6 [&_[data-slot=card-content]]:px-4 [&_[data-slot=card-content]]:sm:px-6 [&_[data-slot=card-footer]]:px-4 [&_[data-slot=card-footer]]:sm:px-6">
         <CardHeader>
           <CardTitle>Create an account</CardTitle>
           <CardDescription>
@@ -63,13 +66,14 @@ export default function SignupPage() {
               <p className="text-sm text-destructive">{error}</p>
             )}
             <div className="space-y-2">
-              <Label htmlFor="name">Name (optional)</Label>
+              <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
                 type="text"
                 placeholder="Your name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                required
                 autoComplete="name"
               />
             </div>
@@ -111,6 +115,5 @@ export default function SignupPage() {
           </CardFooter>
         </form>
       </Card>
-    </main>
   );
 }

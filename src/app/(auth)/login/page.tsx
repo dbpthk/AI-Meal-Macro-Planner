@@ -2,7 +2,7 @@
 
 import { authClient } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
@@ -30,27 +30,30 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      const { error } = await authClient.signIn.email({
+      const result = await authClient.signIn.email({
         email,
         password,
         callbackURL: callbackUrl,
       });
-      if (error) {
-        setError(error.message ?? "Invalid email or password");
+      if (result.error) {
+        const msg =
+          typeof result.error === "object" && "message" in result.error
+            ? String(result.error.message)
+            : "Invalid email or password";
+        setError(msg);
         return;
       }
       router.push(callbackUrl);
       router.refresh();
-    } catch {
-      setError("Something went wrong");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <Card className="w-full border-0 shadow-xl sm:border [&_[data-slot=card-header]]:px-4 [&_[data-slot=card-header]]:sm:px-6 [&_[data-slot=card-content]]:px-4 [&_[data-slot=card-content]]:sm:px-6 [&_[data-slot=card-footer]]:px-4 [&_[data-slot=card-footer]]:sm:px-6">
         <CardHeader>
           <CardTitle>Sign in</CardTitle>
           <CardDescription>
@@ -99,6 +102,13 @@ export default function LoginPage() {
           </CardFooter>
         </form>
       </Card>
-    </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<Card className="w-full max-w-md animate-pulse p-6 sm:p-8" />}>
+      <LoginForm />
+    </Suspense>
   );
 }
