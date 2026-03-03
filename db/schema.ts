@@ -8,29 +8,19 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  varchar,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { user } from "./auth-schema";
 
-// Users - authentication/identity
-export const users = pgTable(
-  "users",
-  {
-    id: serial("id").primaryKey(),
-    email: text("email").notNull().unique(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  },
-  (t) => [uniqueIndex("users_email_idx").on(t.email)]
-);
-
-// Profiles - user demographics and physical data (1:1 with users)
+// Profiles - user demographics and physical data (1:1 with user)
 export const profiles = pgTable(
   "profiles",
   {
     id: serial("id").primaryKey(),
-    userId: integer("user_id")
+    userId: varchar("user_id", { length: 255 })
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" })
+      .references(() => user.id, { onDelete: "cascade" })
       .unique(),
     name: text("name"),
     birthDate: date("birth_date"),
@@ -43,14 +33,14 @@ export const profiles = pgTable(
   (t) => [uniqueIndex("profiles_user_id_idx").on(t.userId)]
 );
 
-// Macro targets - daily calorie/macro goals per user (1:many with users)
+// Macro targets - daily calorie/macro goals per user (1:many with user)
 export const macroTargets = pgTable(
   "macro_targets",
   {
     id: serial("id").primaryKey(),
-    userId: integer("user_id")
+    userId: varchar("user_id", { length: 255 })
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => user.id, { onDelete: "cascade" }),
     calories: real("calories"),
     proteinG: real("protein_g"),
     carbsG: real("carbs_g"),
@@ -69,7 +59,9 @@ export const foods = pgTable(
   "foods",
   {
     id: serial("id").primaryKey(),
-    userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+    userId: varchar("user_id", { length: 255 }).references(() => user.id, {
+      onDelete: "set null",
+    }),
     name: text("name").notNull(),
     brand: text("brand"),
     servingSize: real("serving_size").notNull(),
@@ -88,14 +80,14 @@ export const foods = pgTable(
   ]
 );
 
-// Weight logs - user weight tracking over time (1:many with users)
+// Weight logs - user weight tracking over time (1:many with user)
 export const weightLogs = pgTable(
   "weight_logs",
   {
     id: serial("id").primaryKey(),
-    userId: integer("user_id")
+    userId: varchar("user_id", { length: 255 })
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => user.id, { onDelete: "cascade" }),
     weightKg: real("weight_kg").notNull(),
     loggedAt: date("logged_at").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -108,7 +100,7 @@ export const weightLogs = pgTable(
 );
 
 // Relations
-export const usersRelations = relations(users, ({ one, many }) => ({
+export const userRelations = relations(user, ({ one, many }) => ({
   profile: one(profiles),
   macroTargets: many(macroTargets),
   weightLogs: many(weightLogs),
@@ -116,29 +108,29 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 }));
 
 export const profilesRelations = relations(profiles, ({ one }) => ({
-  user: one(users, {
+  user: one(user, {
     fields: [profiles.userId],
-    references: [users.id],
+    references: [user.id],
   }),
 }));
 
 export const macroTargetsRelations = relations(macroTargets, ({ one }) => ({
-  user: one(users, {
+  user: one(user, {
     fields: [macroTargets.userId],
-    references: [users.id],
+    references: [user.id],
   }),
 }));
 
 export const foodsRelations = relations(foods, ({ one }) => ({
-  user: one(users, {
+  user: one(user, {
     fields: [foods.userId],
-    references: [users.id],
+    references: [user.id],
   }),
 }));
 
 export const weightLogsRelations = relations(weightLogs, ({ one }) => ({
-  user: one(users, {
+  user: one(user, {
     fields: [weightLogs.userId],
-    references: [users.id],
+    references: [user.id],
   }),
 }));
