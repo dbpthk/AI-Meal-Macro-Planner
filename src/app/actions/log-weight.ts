@@ -12,15 +12,10 @@ const logWeightSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
-export type LogWeightState = {
-  success?: boolean;
-  error?: string;
-};
-
 export async function logWeightAndAdjust(
   weightKg: number,
   date?: string
-): Promise<LogWeightState> {
+): Promise<{ success?: boolean; error?: string }> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user?.id) {
     return { error: "You must be signed in." };

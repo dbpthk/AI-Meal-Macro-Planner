@@ -17,15 +17,10 @@ const profileSchema = z.object({
   trainingDays: z.coerce.number().min(0).max(7).int(),
 });
 
-export type SubmitProfileState = {
-  success?: boolean;
-  error?: string;
-};
-
 export async function submitProfileSetup(
-  _prevState: SubmitProfileState | null,
+  _prevState: { success?: boolean; error?: string } | null,
   formData: FormData
-): Promise<SubmitProfileState> {
+): Promise<{ success?: boolean; error?: string }> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user?.id) {
     return { error: "You must be signed in." };

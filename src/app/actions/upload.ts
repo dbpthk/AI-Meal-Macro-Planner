@@ -14,7 +14,11 @@ const uploadRequestSchema = z.object({
   fileSize: z.number().min(1).max(MAX_SIZE_BYTES),
 });
 
-export type GetUploadSignatureState = {
+export async function getCloudinaryUploadSignature(
+  fileName: string,
+  fileType: string,
+  fileSize: number
+): Promise<{
   success?: boolean;
   error?: string;
   signature?: string;
@@ -22,14 +26,7 @@ export type GetUploadSignatureState = {
   apiKey?: string;
   cloudName?: string;
   folder?: string;
-  maxFileSize?: number;
-};
-
-export async function getCloudinaryUploadSignature(
-  fileName: string,
-  fileType: string,
-  fileSize: number
-): Promise<GetUploadSignatureState> {
+}> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user?.id) {
     return { error: "You must be signed in." };
@@ -66,11 +63,9 @@ export async function getCloudinaryUploadSignature(
   const folder = `foods/${session.user.id}`;
   const timestamp = Math.round(Date.now() / 1000);
 
-  const paramsToSign = {
-    folder,
-    timestamp,
-    max_file_size: MAX_SIZE_BYTES,
-  };
+  // Only sign folder and timestamp - Cloudinary verifies these. max_file_size
+  // is not included in their signature verification.
+  const paramsToSign = { folder, timestamp };
 
   try {
     const signature = cloudinary.utils.api_sign_request(
@@ -85,7 +80,6 @@ export async function getCloudinaryUploadSignature(
       apiKey,
       cloudName,
       folder,
-      maxFileSize: MAX_SIZE_BYTES,
     };
   } catch (err) {
     console.error("Cloudinary signature generation failed:", err);

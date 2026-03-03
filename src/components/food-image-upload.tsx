@@ -57,7 +57,11 @@ export function FoodImageUpload({
       );
 
       if (result.error) {
-        setError(result.error);
+        setError(
+          result.error === "Upload is not configured."
+            ? "Image upload is not configured. Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your .env file."
+            : result.error
+        );
         URL.revokeObjectURL(blobUrl);
         setPreview(null);
         return;
@@ -83,9 +87,6 @@ export function FoodImageUpload({
       if (result.folder) {
         formData.append("folder", result.folder);
       }
-      if (result.maxFileSize) {
-        formData.append("max_file_size", String(result.maxFileSize));
-      }
 
       const res = await fetch(
         `${CLOUDINARY_UPLOAD_URL}/${result.cloudName}/image/upload`,
@@ -96,8 +97,14 @@ export function FoodImageUpload({
       );
 
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        setError(errData?.error?.message ?? "Upload failed.");
+        const errData = (await res.json().catch(() => ({}))) as {
+          error?: { message?: string } | string;
+        };
+        const errMsg =
+          typeof errData?.error === "string"
+            ? errData.error
+            : errData?.error?.message ?? `Upload failed (${res.status}).`;
+        setError(errMsg);
         URL.revokeObjectURL(blobUrl);
         setPreview(null);
         return;
@@ -108,8 +115,10 @@ export function FoodImageUpload({
       URL.revokeObjectURL(blobUrl);
       setPreview(finalUrl);
       onChange?.(finalUrl);
-    } catch {
-      setError("Upload failed.");
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Upload failed.";
+      setError(msg);
       URL.revokeObjectURL(blobUrl);
       setPreview(null);
     } finally {

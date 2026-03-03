@@ -1,32 +1,13 @@
 "use server";
 
-import { z } from "zod";
 import OpenAI from "openai";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-
-const detectedFoodItemSchema = z.object({
-  name: z.string(),
-  estimatedWeightG: z.number().min(0),
-  caloriesPer100g: z.number().min(0),
-  proteinPer100g: z.number().min(0),
-  carbsPer100g: z.number().min(0),
-  fatPer100g: z.number().min(0),
-  confidence: z.number().min(0).max(1).optional(),
-});
-
-export const detectFoodResponseSchema = z.object({
-  items: z.array(detectedFoodItemSchema),
-});
-
-export type DetectedFoodItem = z.infer<typeof detectedFoodItemSchema>;
-export type DetectFoodResponse = z.infer<typeof detectFoodResponseSchema>;
-
-export type DetectFoodState = {
-  success?: boolean;
-  error?: string;
-  items?: DetectedFoodItem[];
-};
+import {
+  detectFoodResponseSchema,
+  type DetectFoodState,
+} from "./detect-food-types";
 
 export async function detectFoodFromImage(
   imageUrl: string
@@ -118,6 +99,106 @@ Rules:
     console.error("Food detection failed:", err);
     const message =
       err instanceof Error ? err.message : "Failed to detect food.";
+    return { error: message };
+  }
+}
+
+const singleIngredientSchema = z.object({
+  caloriesPer100g: z.number().min(0),
+  proteinPer100g: z.number().min(0),
+  carbsPer100g: z.number().min(0),
+  fatPer100g: z.number().min(0),
+});
+
+export async function lookupIngredientMacros(
+  ingredientName: string
+): Promise<{
+  success?: boolean;
+  error?: string;
+  caloriesPer100g?: number;
+  proteinPer100g?: number;
+  carbsPer100g?: number;
+  fatPer100g?: number;
+}> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user?.id) {
+    return { error: "You must be signed in." };
+  }
+
+  const name = ingredientName?.trim();
+  if (!name) {
+    return { error: "Enter an ingredient name." };
+  }
+
+  // Try USDA FoodData Central first (free, no quota)
+  const usdaKey = process.env.USDA_FDC_API_KEY;
+  if (usdaKey) {
+    const { lookupUsdaMacros } = await import("@/lib/usda-fdc");
+    const usdaResult = await lookupUsdaMacros(name, usdaKey);
+    if (usdaResult.success) {
+      return {
+        success: true,
+        ...usdaResult.data,
+      };
+    }
+    // USDA failed (no results, etc.) - fall through to OpenAI
+  }
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    return {
+      error: usdaKey
+        ? "No results from USDA. OpenAI is not configured."
+        : "Configure USDA_FDC_API_KEY or OPENAI_API_KEY for macro lookup.",
+    };
+  }
+
+  const openai = new OpenAI({ apiKey });
+
+  const prompt = `For the food "${name}", provide typical nutrition per 100g. Return only valid JSON with this exact structure:
+{
+  "caloriesPer100g": 0,
+  "proteinPer100g": 0,
+  "carbsPer100g": 0,
+  "fatPer100g": 0
+}
+Use typical values for this food (raw/cooked as appropriate). Round to 1 decimal.`;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a nutrition assistant. Return only valid JSON, no markdown.",
+        },
+        { role: "user", content: prompt },
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 128,
+    });
+
+    const content = completion.choices[0]?.message?.content;
+    if (!content) {
+      return { error: "No response from AI." };
+    }
+
+    const parsed = JSON.parse(content) as unknown;
+    const validated = singleIngredientSchema.safeParse(parsed);
+
+    if (!validated.success) {
+      return { error: "Could not get macros for this ingredient." };
+    }
+
+    return {
+      success: true,
+      ...validated.data,
+    };
+  } catch (err) {
+    console.error("Ingredient lookup failed:", err);
+    const message =
+      err instanceof Error ? err.message : "Failed to look up ingredient.";
     return { error: message };
   }
 }
